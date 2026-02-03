@@ -13,7 +13,16 @@ const app = express();
 app.use(cors());
 
 app.post('/', (req, res) => {
-  let collection = req.query.collection;
+  const rawCollection = req.query.collection;
+
+  // Ensure collection is a single string query parameter to avoid type confusion
+  if (typeof rawCollection !== 'string') {
+    return res
+      .status(HttpStatus.BadRequest)
+      .send({error: 'Invalid collection parameter'});
+  }
+
+  let collection = rawCollection;
 
   if (collection.includes('-')) {
     collection = collection.substring(0, collection.length - 3);
@@ -49,7 +58,7 @@ app.post('/', (req, res) => {
             acc.created.push(
               admin
                 .firestore()
-                .collection(req.query.collection)
+                .collection(collection)
                 .doc(id || nanoid())
                 .set({
                   ...data,
